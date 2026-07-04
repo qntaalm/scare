@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>Happy Birthday 🎂</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+}
+
+html,body{
+margin:0;
+width:100%;
+height:100%;
+background:#000;
+overflow:hidden;
+font-family:Arial,sans-serif;
+color:white;
+text-align:center;
+}
+
+#btn{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+padding:18px 45px;
+font-size:20px;
+color:#fff;
+background:linear-gradient(45deg,#1a1a1a,#3a3a3a);
+border:1px solid #666;
+border-radius:50px;
+cursor:pointer;
+box-shadow:0 0 20px grey;
+transition:all 0.15s ease;
+}
+
+#btn:hover{
+transform:translate(-50%,-50%) scale(1.1);
+box-shadow:0 0 30px white;
+}
+
+#heartWrap{
+display:none;
+position:absolute;
+inset:0;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+}
+
+svg{
+width:260px;
+filter:drop-shadow(0 0 60px #ff4da6);
+animation:pulse 1.4s infinite ease-in-out;
+}
+
+@keyframes pulse{
+0%,100%{
+transform:scale(1);
+}
+50%{
+transform:scale(1.15);
+}
+}
+
+#progressWrap{
+width:260px;
+height:8px;
+background:#222;
+border-radius:10px;
+overflow:hidden;
+margin-top:20px;
+}
+
+#progressBar{
+width:0%;
+height:100%;
+background:linear-gradient(90deg,#ff7fc8,#b4006a);
+}
+
+button{
+margin-top:20px;
+padding:10px 25px;
+border:none;
+border-radius:30px;
+background:#ff4da6;
+color:white;
+font-size:16px;
+cursor:pointer;
+transition:0.2s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+#qrBox{
+position:relative;
+margin-top:20px;
+display:none;
+padding:15px;
+background:#111;
+border-radius:20px;
+box-shadow:0 0 25px #ff4da6;
+
+flex-direction:column;
+align-items:center;
+justify-content:center;
+}
+
+#scanLine{
+position:absolute;
+width:200px;
+height:4px;
+background:cyan;
+left:50%;
+transform:translateX(-50%);
+top:20px;
+display:none;
+border-radius:10px;
+box-shadow:0 0 15px cyan;
+animation:scan 2s linear infinite;
+}
+
+@keyframes scan{
+0%{
+top:20px;
+}
+100%{
+top:220px;
+}
+}
+
+#giftCard{
+display:none;
+margin-top:20px;
+background:#111;
+padding:20px;
+border-radius:15px;
+box-shadow:0 0 20px #ff4da6;
+width:260px;
+animation:fadeIn 1s ease;
+}
+
+@keyframes fadeIn{
+from{
+opacity:0;
+transform:translateY(20px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
+}
+
+.copyBtn{
+margin-top:10px;
+padding:6px 15px;
+border:none;
+border-radius:20px;
+background:#ff4da6;
+color:#fff;
+cursor:pointer;
+}
+
+h1{
+margin-top:30px;
+color:#ff9fd9;
+letter-spacing:6px;
+font-weight:300;
+text-shadow:0 0 20px #ff4da6;
+}
+
+#qrcode{
+width:200px;
+height:200px;
+margin:20px auto;
+padding:10px;
+background:white;
+border-radius:12px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+</style>
+</head>
+
+<body>
+
+<canvas id="c"></canvas>
+
+<button id="btn">اضغط</button>
+
+<div id="heartWrap">
+
+<svg viewBox="0 0 32 29.6">
+
+<defs>
+<linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0%" stop-color="#ffffff"/>
+<stop offset="45%" stop-color="#ff7fc8"/>
+<stop offset="100%" stop-color="#b4006a"/>
+</linearGradient>
+</defs>
+
+<path fill="url(#g)" d="M23.6,0c-3.4,0-6.4,2.1-7.6,5.1C14.8,2.1,11.8,0,8.4,0
+C3.8,0,0,3.8,0,8.4c0,9.4,16,21.2,16,21.2s16-11.8,16-21.2
+C32,3.8,28.2,0,23.6,0z"/>
+
+</svg>
+
+<h1>🎂 عيد ميلاد سعيد 🎂</h1>
+
+<div id="progressWrap">
+<div id="progressBar"></div>
+</div>
+
+<button id="giftBtn" style="display:none;">
+🎁 استلام الهدية
+</button>
+
+<div id="qrBox">
+
+<div id="scanLine"></div>
+
+<div id="qrcode"></div>
+
+<button id="scanBtn">
+📷 مسح الكود
+</button>
+
+</div>
+
+<div id="giftCard" style="
+display:none;
+margin-top:20px;
+background:#111;
+padding:15px;
+border-radius:15px;
+box-shadow:0 0 20px #ff4da6;
+width:90%;
+max-width:500px;
+">
+
+<video
+id="myVideo"
+autoplay
+controls
+playsinline
+style="width:100%; height:auto; border-radius:10px;">
+    <source src="video.mp4" type="video/mp4">
+</video>
+
+</div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+<script>
+
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playClick(){
+
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+
+osc.type = "sawtooth";
+osc.frequency.value = 900;
+
+gain.gain.value = 0.5;
+
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+
+osc.start();
+
+osc.stop(audioCtx.currentTime + 0.15);
+}
+
+function playNote(freq,duration,delay){
+
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+
+osc.type = "triangle";
+osc.frequency.value = freq;
+
+gain.gain.setValueAtTime(
+0.001,
+audioCtx.currentTime + delay
+);
+
+gain.gain.exponentialRampToValueAtTime(
+1,
+audioCtx.currentTime + delay + 0.05
+);
+
+gain.gain.exponentialRampToValueAtTime(
+0.001,
+audioCtx.currentTime + delay + duration
+);
+
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+
+osc.start(audioCtx.currentTime + delay);
+
+osc.stop(audioCtx.currentTime + delay + duration);
+}
+
+function playBirthday(){
+
+const notes=[
+264,264,297,264,352,330,
+264,264,297,264,396,352,
+264,264,528,440,352,330,
+297,466,466,440,352,396,352
+];
+
+const durations=[
+.4,.4,.8,.8,.8,1,
+.4,.4,.8,.8,.8,1,
+.4,.4,.8,.8,.8,.8,
+1,.4,.4,.8,.8,.8,1.2
+];
+
+let time=0;
+
+for(let i=0;i<notes.length;i++){
+
+playNote(notes[i],durations[i],time);
+
+time += durations[i];
+}
+
+return time;
+}
+
+const btn=document.getElementById("btn");
+const heart=document.getElementById("heartWrap");
+const progressBar=document.getElementById("progressBar");
+const giftBtn=document.getElementById("giftBtn");
+const qrBox=document.getElementById("qrBox");
+const scanBtn=document.getElementById("scanBtn");
+const scanLine=document.getElementById("scanLine");
+const giftCard=document.getElementById("giftCard");
+
+let clicks=0;
+
+btn.onclick=()=>{
+
+audioCtx.resume();
+
+playClick();
+
+if(clicks < 4){
+
+clicks++;
+
+btn.style.left=Math.random()*80+10+"%";
+btn.style.top=Math.random()*70+10+"%";
+
+}else{
+
+btn.remove();
+
+heart.style.display="flex";
+
+const total=playBirthday();
+
+progressBar.style.transition=`width ${total}s linear`;
+
+setTimeout(()=>{
+progressBar.style.width="100%";
+},50);
+
+setTimeout(()=>{
+giftBtn.style.display="block";
+},total*1000);
+
+}
+};
+
+let qrCreated=false;
+
+giftBtn.onclick=()=>{
+
+giftBtn.style.display="none";
+
+qrBox.style.display="flex";
+
+if(!qrCreated){
+
+new QRCode(document.getElementById("qrcode"),{
+text:"https://example.com",
+width:180,
+height:180,
+colorDark:"#000000",
+colorLight:"#ffffff"
+});
+
+qrCreated=true;
+}
+};
+
+scanBtn.onclick=()=>{
+
+if(navigator.vibrate){
+navigator.vibrate(200);
+}
+
+scanLine.style.display="block";
+
+const osc=audioCtx.createOscillator();
+const gain=audioCtx.createGain();
+
+osc.type="sine";
+osc.frequency.value=1200;
+
+gain.gain.value=0.5;
+
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+
+osc.start();
+
+osc.stop(audioCtx.currentTime+0.2);
+
+setTimeout(()=>{
+
+scanLine.style.display="none";
+
+qrBox.style.display="none";
+
+const successOsc=audioCtx.createOscillator();
+const successGain=audioCtx.createGain();
+
+successOsc.type="triangle";
+successOsc.frequency.value=700;
+
+successOsc.connect(successGain);
+successGain.connect(audioCtx.destination);
+
+successOsc.start();
+
+successOsc.stop(audioCtx.currentTime+0.25);
+
+giftCard.style.display="block";
+
+},3500);
+
+};
+
+
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+
+let w,h,particles=[];
+
+function resize(){
+
+w=c.width=innerWidth;
+h=c.height=innerHeight;
+}
+
+addEventListener('resize',resize);
+
+resize();
+
+for(let i=0;i<140;i++){
+
+particles.push({
+x:Math.random()*w,
+y:Math.random()*h,
+s:Math.random()*1.5+0.3,
+a:Math.random()*0.4+0.1
+});
+}
+
+function animate(){
+
+ctx.clearRect(0,0,w,h);
+
+particles.forEach(p=>{
+
+p.y += p.s;
+
+if(p.y > h){
+p.y = -10;
+}
+
+ctx.globalAlpha = p.a;
+
+ctx.fillStyle = '#fff';
+
+ctx.fillRect(p.x,p.y,2,2);
+
+});
+
+requestAnimationFrame(animate);
+}
+
+animate();
+
+const video = document.getElementById("myVideo");
+
+video.addEventListener("ended", () => {
+    // ينفذ عند انتهاء الفيديو إذا أردت
+});
+
+video.addEventListener("pause", () => {
+    video.play();
+});
+
+</script>
+
+
+
+</body>
+</html>
